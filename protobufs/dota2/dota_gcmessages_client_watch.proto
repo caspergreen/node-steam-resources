@@ -1,12 +1,11 @@
 import "dota_gcmessages_common.proto";
 
-option optimize_for = SPEED;
-option cc_generic_services = false;
-
 message CSourceTVGameSmall {
 	message Player {
 		optional uint32 account_id = 1;
-		optional uint32 hero_id = 2;
+		optional int32 hero_id = 2;
+		optional uint32 team_slot = 3;
+		optional uint32 team = 4;
 	}
 
 	optional uint32 activate_time = 1;
@@ -39,12 +38,15 @@ message CSourceTVGameSmall {
 	optional uint32 weekend_tourney_division = 27;
 	optional uint32 weekend_tourney_skill_level = 28;
 	optional uint32 weekend_tourney_bracket_round = 29;
+	optional uint32 custom_game_difficulty = 32;
+	optional bool is_player_draft = 33;
+	optional bool is_watch_eligible = 34;
 }
 
 message CMsgClientToGCFindTopSourceTVGames {
 	optional string search_key = 1;
 	optional uint32 league_id = 2;
-	optional uint32 hero_id = 3;
+	optional int32 hero_id = 3;
 	optional uint32 start_game = 4;
 	optional uint32 game_list_index = 5;
 	repeated uint64 lobby_ids = 6;
@@ -53,7 +55,7 @@ message CMsgClientToGCFindTopSourceTVGames {
 message CMsgGCToClientFindTopSourceTVGamesResponse {
 	optional string search_key = 1;
 	optional uint32 league_id = 2;
-	optional uint32 hero_id = 3;
+	optional int32 hero_id = 3;
 	optional uint32 start_game = 4;
 	optional uint32 num_games = 5;
 	optional uint32 game_list_index = 6;
@@ -64,12 +66,6 @@ message CMsgGCToClientFindTopSourceTVGamesResponse {
 
 message CMsgGCToClientTopWeekendTourneyGames {
 	repeated .CSourceTVGameSmall live_games = 1;
-}
-
-message CMsgClientToGCTopMatchesRequest {
-	optional uint32 hero_id = 1;
-	optional uint32 player_account_id = 2;
-	optional uint32 team_id = 3;
 }
 
 message CMsgClientToGCTopLeagueMatchesRequest {
@@ -95,23 +91,6 @@ message CMsgGCToClientTopFriendMatchesResponse {
 	repeated .CMsgDOTAMatchMinimal matches = 1;
 }
 
-message CMsgClientToGCFindTopMatches {
-	optional uint32 start_game = 1;
-	optional uint32 league_id = 2;
-	optional uint32 hero_id = 3;
-	optional uint32 friend_id = 4;
-	optional bool friend_list = 5;
-	optional bool league_list = 6;
-}
-
-message CMsgGCToClientFindTopLeagueMatchesResponse {
-	optional uint32 start_game = 1;
-	optional uint32 league_id = 2;
-	optional uint32 hero_id = 3;
-	repeated uint32 match_ids = 4;
-	repeated .CMsgDOTAMatch matches = 5;
-}
-
 message CMsgSpectateFriendGame {
 	optional fixed64 steam_id = 1;
 	optional bool live = 2;
@@ -133,6 +112,7 @@ message CMsgSpectateFriendGameResponse {
 		ERROR_SPECTATOR_SWITCHED_TEAMS = 11;
 		ERROR_FRIENDS_ON_BOTH_SIDES = 12;
 		ERROR_SPECTATOR_IN_THIS_LOBBY = 13;
+		ERROR_LOBBY_IS_LEAGUE = 14;
 	}
 
 	optional fixed64 server_steamid = 4;
@@ -183,6 +163,7 @@ message CMsgWatchGameResponse {
 	optional fixed64 game_server_steamid = 5;
 	optional fixed64 watch_server_steamid = 6;
 	optional fixed64 watch_tv_unique_secret_code = 7;
+	optional string broadcast_url = 8;
 }
 
 message CMsgPartyLeaderWatchGamePrompt {
@@ -225,4 +206,3 @@ message CMsgDOTASeries {
 	repeated .CMsgDOTAMatchMinimal match_minimal = 5;
 	optional .CMsgDOTASeries.LiveGame live_game = 6;
 }
-

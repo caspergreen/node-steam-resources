@@ -1,6 +1,18 @@
+import "steammessages_base.proto";
 import "steammessages_unified_base.steamclient.proto";
 
 option cc_generic_services = true;
+
+enum EValveIndexComponent {
+	k_EValveIndexComponentUnknown = 0;
+	k_EValveIndexComponentHMD = 1;
+	k_EValveIndexComponentLeftKnuckle = 2;
+	k_EValveIndexComponentRightKnuckle = 3;
+	k_EValveIndexComponentSteamFrameHMD = 4;
+	k_EValveIndexComponentSteamFrameLeftController = 5;
+	k_EValveIndexComponentSteamFrameRightController = 6;
+	k_EValveIndexComponentSteamFrameWirelessAdapter = 7;
+}
 
 message CAccountHardware_RegisterSteamController_Request {
 	optional string serial_number = 1;
@@ -30,6 +42,18 @@ message CAccountHardware_QueryAccountsRegisteredToSerial_Accounts {
 
 message CAccountHardware_QueryAccountsRegisteredToSerial_Response {
 	repeated .CAccountHardware_QueryAccountsRegisteredToSerial_Accounts accounts = 1;
+}
+
+message CAccountHardware_UpdateControllerUsageReport_Request {
+	message Controller {
+		optional string serial_number = 1;
+		optional string controller_code = 2;
+	}
+
+	repeated .CAccountHardware_UpdateControllerUsageReport_Request.Controller controllers = 1;
+}
+
+message CAccountHardware_UpdateControllerUsageReport_Response {
 }
 
 message CAccountHardware_SteamControllerSetConfig_ControllerConfig {
@@ -64,6 +88,7 @@ message CAccountHardware_SteamControllerGetConfig_ControllerConfig {
 	optional uint64 publishedfileid = 2;
 	optional string templatename = 3;
 	optional string serial_number = 4;
+	optional bool autosave = 5 [default = false];
 }
 
 message CAccountHardware_SteamControllerGetConfig_Response {
@@ -97,30 +122,110 @@ message CAccountHardware_GetPersonalizationFile_Response {
 	optional uint64 publishedfileid = 1;
 }
 
+message CAccountHardware_VRCompatibilityCheck_Request {
+	message Pair {
+		optional string key = 1;
+		optional string value = 2;
+	}
+
+	optional string product_name = 1;
+	repeated .CAccountHardware_VRCompatibilityCheck_Request.Pair values = 2;
+}
+
+message CAccountHardware_VRCompatibilityCheck_Response {
+	message Pair {
+		optional string key = 1;
+		optional string value = 2;
+	}
+
+	message ComponentDisplay {
+		optional string name = 1;
+		optional string image = 2;
+		optional string value = 3;
+	}
+
+	repeated .CAccountHardware_VRCompatibilityCheck_Response.Pair values = 1;
+	repeated .CAccountHardware_VRCompatibilityCheck_Response.ComponentDisplay components = 2;
+}
+
+message CAccountHardware_RegisterValveIndexComponent_Request {
+	optional string serial_number = 1;
+	optional string manufacturer_serial_number = 2;
+	optional string component_code = 3;
+	optional .EValveIndexComponent component_type = 4 [default = k_EValveIndexComponentUnknown];
+	optional int32 estimated_time_registered = 5;
+}
+
+message CAccountHardware_RegisterValveIndexComponent_Response {
+}
+
+message CAccountHardware_GetSteamDeckComponents_Request {
+	optional string serial_number = 1;
+	optional string controller_code = 2;
+}
+
+message CAccountHardware_GetSteamDeckComponents_Response {
+	optional string json_components = 1;
+}
+
+message CAccountHardware_SaveHardware_Request {
+	optional string friendly_name = 1;
+	optional .UserSystemInformation system_info = 2;
+	optional bool backfill_user_reviews = 3;
+}
+
+message CAccountHardware_SaveHardware_Response {
+	optional uint64 hardware_id = 1;
+}
+
+message CAccountHardware_ManageSavedHardware_Request {
+	optional uint64 hardware_id = 1;
+	optional bool delete_hardware = 2;
+	optional string friendly_name_update = 3;
+}
+
+message CAccountHardware_ManageSavedHardware_Response {
+}
+
+message CAccountHardware_GetSavedHardwareList_Request {
+	optional fixed64 steamid = 1;
+}
+
+message CAccountHardware_SavedHardware_Details {
+	optional uint64 hardware_id = 1;
+	optional string friendly_name = 2;
+	optional uint32 timestamp_created = 3;
+	optional uint64 hardware_cluster_id = 4;
+	optional .UserSystemInformation system_info = 5;
+}
+
+message CAccountHardware_GetSavedHardwareList_Response {
+	repeated .CAccountHardware_SavedHardware_Details saved_hardware = 1;
+}
+
+message CAccountHardware_RegisterSteamMachine_Request {
+	optional string serial_number = 1;
+	optional string machine_code = 2;
+}
+
+message CAccountHardware_RegisterSteamMachine_Response {
+}
+
 service AccountHardware {
-	option (service_description) = "A service to use account hardware related methods";
-	rpc RegisterSteamController (.CAccountHardware_RegisterSteamController_Request) returns (.CAccountHardware_RegisterSteamController_Response) {
-		option (method_description) = "Records a serial number and the calling user's account info for warranty purposes.";
-	}
-	rpc CompleteSteamControllerRegistration (.CAccountHardware_CompleteSteamControllerRegistration_Request) returns (.CAccountHardware_CompleteSteamControllerRegistration_Response) {
-		option (method_description) = "Marks a controller's registration as complete";
-	}
-	rpc QueryAccountsRegisteredToController (.CAccountHardware_QueryAccountsRegisteredToSerial_Request) returns (.CAccountHardware_QueryAccountsRegisteredToSerial_Response) {
-		option (method_description) = "Sends back a list of accounts registered to a controller.";
-	}
-	rpc SetDesiredControllerConfigForApp (.CAccountHardware_SteamControllerSetConfig_Request) returns (.CAccountHardware_SteamControllerSetConfig_Response) {
-		option (method_description) = "Sets a desired controller config for an app";
-	}
-	rpc GetDesiredControllerConfigForApp (.CAccountHardware_SteamControllerGetConfig_Request) returns (.CAccountHardware_SteamControllerGetConfig_Response) {
-		option (method_description) = "Gets a desired controller config for an app";
-	}
-	rpc DeRegisterSteamController (.CAccountHardware_DeRegisterSteamController_Request) returns (.CAccountHardware_DeRegisterSteamController_Response) {
-		option (method_description) = "De registers a controller";
-	}
-	rpc SetControllerPersonalizationFile (.CAccountHardware_SetPersonalizationFile_Request) returns (.CAccountHardware_SetPersonalizationFile_Response) {
-		option (method_description) = "Stores the file ID of the personalization file";
-	}
-	rpc GetControllerPersonalizationFile (.CAccountHardware_GetPersonalizationFile_Request) returns (.CAccountHardware_GetPersonalizationFile_Response) {
-		option (method_description) = "Gets the file ID of the personalization file";
-	}
+	rpc RegisterSteamController (.CAccountHardware_RegisterSteamController_Request) returns (.CAccountHardware_RegisterSteamController_Response);
+	rpc CompleteSteamControllerRegistration (.CAccountHardware_CompleteSteamControllerRegistration_Request) returns (.CAccountHardware_CompleteSteamControllerRegistration_Response);
+	rpc QueryAccountsRegisteredToController (.CAccountHardware_QueryAccountsRegisteredToSerial_Request) returns (.CAccountHardware_QueryAccountsRegisteredToSerial_Response);
+	rpc UpdateControllerUsageReport (.CAccountHardware_UpdateControllerUsageReport_Request) returns (.CAccountHardware_UpdateControllerUsageReport_Response);
+	rpc SetDesiredControllerConfigForApp (.CAccountHardware_SteamControllerSetConfig_Request) returns (.CAccountHardware_SteamControllerSetConfig_Response);
+	rpc GetDesiredControllerConfigForApp (.CAccountHardware_SteamControllerGetConfig_Request) returns (.CAccountHardware_SteamControllerGetConfig_Response);
+	rpc DeRegisterSteamController (.CAccountHardware_DeRegisterSteamController_Request) returns (.CAccountHardware_DeRegisterSteamController_Response);
+	rpc SetControllerPersonalizationFile (.CAccountHardware_SetPersonalizationFile_Request) returns (.CAccountHardware_SetPersonalizationFile_Response);
+	rpc GetControllerPersonalizationFile (.CAccountHardware_GetPersonalizationFile_Request) returns (.CAccountHardware_GetPersonalizationFile_Response);
+	rpc VRCompatibilityCheck (.CAccountHardware_VRCompatibilityCheck_Request) returns (.CAccountHardware_VRCompatibilityCheck_Response);
+	rpc RegisterValveIndexComponent (.CAccountHardware_RegisterValveIndexComponent_Request) returns (.CAccountHardware_RegisterValveIndexComponent_Response);
+	rpc GetSteamDeckComponents (.CAccountHardware_GetSteamDeckComponents_Request) returns (.CAccountHardware_GetSteamDeckComponents_Response);
+	rpc SaveHardware (.CAccountHardware_SaveHardware_Request) returns (.CAccountHardware_SaveHardware_Response);
+	rpc ManageSavedHardware (.CAccountHardware_ManageSavedHardware_Request) returns (.CAccountHardware_ManageSavedHardware_Response);
+	rpc GetSavedHardwareList (.CAccountHardware_GetSavedHardwareList_Request) returns (.CAccountHardware_GetSavedHardwareList_Response);
+	rpc RegisterSteamMachine (.CAccountHardware_RegisterSteamMachine_Request) returns (.CAccountHardware_RegisterSteamMachine_Response);
 }
